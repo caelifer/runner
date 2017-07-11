@@ -2,6 +2,7 @@ package component
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -16,7 +17,7 @@ func init() {
 
 type Task interface {
 	Execute(ctx context.Context) error
-	String() string
+	Name() string
 }
 
 type task struct {
@@ -46,11 +47,16 @@ func (t *task) Execute(ctx context.Context) (err error) {
 		)
 	}(time.Now())
 
-	cmd := exec.CommandContext(ctx, t.cmd, t.args...)
-	cmd.Stderr = os.Stderr
-
+	// cmd := exec.CommandContext(ctx, t.cmd, t.args...)
+	pause := fmt.Sprintf("%.2f", (time.Duration(500+rand.Intn(5000)) * time.Millisecond).Seconds())
 	// Simulate work
-	time.Sleep(time.Duration(500+rand.Intn(5000)) * time.Millisecond)
+	cmd := exec.CommandContext(ctx, "sleep", pause)
+	cmd.Stderr = os.Stderr
+	if err = cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			err = errors.New("execution timed out")
+		}
+	}
 
 	// Update state
 	t.err = err

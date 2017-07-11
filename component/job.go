@@ -8,9 +8,10 @@ import (
 
 	"github.com/caelifer/runner/util/generator"
 	"github.com/caelifer/runner/service/store"
+	"strings"
 )
 
-var timeout = time.Duration(3 * time.Second)
+var timeout = time.Duration(5 * time.Second)
 
 type Job interface {
 	Run(ctx context.Context) error
@@ -51,7 +52,8 @@ func (j *job) Run(ctx context.Context) (err error) {
 			"component", "job",
 			"id", j.id,
 			"status", "finished",
-			"error", err,
+			"success", j.success,
+			"err", err,
 			"duration", time.Since(t0),
 		)
 	}(time.Now())
@@ -77,7 +79,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 			defer cancel()
 
 			err := task.Execute(ctx)
-			res <- result{task.String(), err}
+			res <- result{task.Name(), err}
 		}()
 	}
 	go func() {
@@ -86,19 +88,22 @@ func (j *job) Run(ctx context.Context) (err error) {
 	}()
 
 	// Update persistent state
+	txt := []string{}
 	for r := range res {
 		if r.err != nil {
 			j.success = false
-			j.text += fmt.Sprintf(" task %q failed: %v;",
+			txt = append(txt, fmt.Sprintf("task '%v' failed: %v",
 				r.tsk,
 				r.err,
-			)
+			))
 		}
 	}
+
+	j.text = strings.Join(txt, ", ")
 	j.store.Update(j.id, j)
 
 	if !j.success {
-		err = fmt.Errorf("job %v failed", j.id)
+		err = fmt.Errorf("job %v failed: %v", j.id, j.text)
 	}
 
 	return

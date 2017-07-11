@@ -25,6 +25,6 @@ func main() {
 	// Execute job
 	err := job.Run(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("runner: %v", err)
 	}
 }
