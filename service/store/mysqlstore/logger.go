@@ -10,5 +10,5 @@ var logger log.Logger
 
 func init() {
 	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
-	logger = log.WithPrefix(logger, "time", log.DefaultTimestampUTC)
+	logger = log.WithPrefix(logger, "time", log.DefaultTimestamp)
 }
