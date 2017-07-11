@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// Create job component
-	var job component.Job = component.NewJob(tasks, storeService)
+	var job = component.NewJob(tasks, storeService)
 
 	// Execute job
 	err := job.Run(context.Background())

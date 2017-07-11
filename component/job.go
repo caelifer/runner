@@ -87,7 +87,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 		close(res)
 	}()
 
-	// Update persistent state
+	// Gather execution status for all executed tasks
 	txt := []string{}
 	for r := range res {
 		if r.err != nil {
@@ -99,6 +99,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 		}
 	}
 
+	// Update persistent state
 	j.text = strings.Join(txt, ", ")
 	j.store.Update(j.id, j)
 
