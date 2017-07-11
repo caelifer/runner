@@ -26,7 +26,7 @@ type job struct {
 	store   store.Service
 }
 
-func NewJob(tasks []Task, store store.Service) Job {
+func NewJob(store store.Service, tasks []Task) Job {
 	j := &job{
 		id:    generator.NewID(),
 		tasks: tasks,
