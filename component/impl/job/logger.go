@@ -1,4 +1,4 @@
-package mysqlstore
+package job
 
 import (
 	"os"

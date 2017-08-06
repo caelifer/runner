@@ -1,4 +1,4 @@
-package mysqlstore
+package mysql
 
 import (
 	"errors"
@@ -21,7 +21,7 @@ type mysqlstoredummy struct {
 	entropy io.Reader
 }
 
-func New() store.Service {
+func New() *mysqlstoredummy {
 	return &mysqlstoredummy{
 		store:   make(map[string]store.Record),
 		entropy: rand.New(rand.NewSource(time.Now().UnixNano())),
