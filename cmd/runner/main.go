@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/caelifer/runner/component"
 	"github.com/caelifer/runner/component/impl/job"
@@ -22,8 +23,13 @@ func main() {
 		task.New("converter-hres", "convert-stream", "-r 1920x1080"),
 	})
 
+	// Create job's conext
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, time.Second*2)
+	defer cancel()
+
 	// Execute job
-	err := j.Run(context.Background())
+	err := j.Run(ctx)
 	if err != nil {
 		log.Fatalf("runner: %v", err)
 	}
