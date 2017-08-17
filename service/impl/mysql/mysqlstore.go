@@ -3,11 +3,18 @@ package mysql
 import (
 	"errors"
 	"io"
+	"log"
 	"math/rand"
-	"sync"
+	"os"
 	"time"
 
+	"fmt"
+
+	"encoding/json"
+
 	"github.com/caelifer/runner/service/store"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 var (
@@ -16,14 +23,34 @@ var (
 
 // type that implements store.Service service interface
 type mysqlstoredummy struct {
-	sync.RWMutex
-	store   map[string]store.Record
 	entropy io.Reader
+	db      *gorm.DB
+	logger  *log.Logger
+}
+
+type logrec struct {
+	Service   string `json:"service"`
+	Operation string `json:"operation"`
+	ID        string `json:"id,omitempty"`
+	Error     string `json:"error,omitempty"`
+	Duration  string `json:"duration"`
+}
+
+func (l logrec) String() string {
+	out, _ := json.Marshal(&l)
+	return string(out)
 }
 
 func New() *mysqlstoredummy {
+	logger := log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
+	db, err := gorm.Open("mysql", "root@/test?charset=utf8&parseTime=True&loc=Local")
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	return &mysqlstoredummy{
-		store:   make(map[string]store.Record),
+		db:      db,
+		logger:  logger,
 		entropy: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
@@ -31,32 +58,40 @@ func New() *mysqlstoredummy {
 func (ms *mysqlstoredummy) Create(record store.Record) (err error) {
 	t0 := time.Now()
 	defer func(t0 time.Time) {
-		logger.Log(
-			"service", "mysqlstoredummy",
-			"operation", "create",
-			"id", record.ID(),
-			"error", err,
-			"duration", time.Since(t0),
+		errStr := ""
+		if err != nil {
+			errStr = err.Error()
+		}
+		ms.logger.Printf("%v",
+			logrec{
+				Service:   "mysqldummy",
+				Operation: "create",
+				ID:        record.ID(),
+				Error:     errStr,
+				Duration:  fmt.Sprintf("%v", time.Since(t0)),
+			},
 		)
 	}(t0)
 
-	// Update state
-	ms.Lock()
-	ms.store[record.ID()] = record
-	ms.Unlock()
+	// run create op
 
 	return
 }
 
 func (ms *mysqlstoredummy) Update(id string, record store.Record) (err error) {
 	defer func(t0 time.Time) {
-		logger.Log(
-			"service", "mysqlstoredummy",
-			"operation", "update",
-			"id", id,
-			"success", record.Success(),
-			"error", err,
-			"duration", time.Since(t0),
+		errStr := ""
+		if err != nil {
+			errStr = err.Error()
+		}
+		ms.logger.Printf("%v",
+			logrec{
+				Service:   "mysqldummy",
+				Operation: "update",
+				ID:        record.ID(),
+				Error:     errStr,
+				Duration:  fmt.Sprintf("%v", time.Since(t0)),
+			},
 		)
 	}(time.Now())
 
@@ -67,21 +102,23 @@ func (ms *mysqlstoredummy) Update(id string, record store.Record) (err error) {
 	}
 
 	// Update state
-	ms.Lock()
-	ms.store[id] = record
-	ms.Unlock()
-
 	return
 }
 
 func (ms *mysqlstoredummy) Delete(id string) (err error) {
 	defer func(t0 time.Time) {
-		logger.Log(
-			"service", "mysqlstoredummy",
-			"operation", "delete",
-			"id", id,
-			"error", err,
-			"duration", time.Since(t0),
+		errStr := ""
+		if err != nil {
+			errStr = err.Error()
+		}
+		ms.logger.Printf("%v",
+			logrec{
+				Service:   "mysqldummy",
+				Operation: "delete",
+				ID:        id,
+				Error:     errStr,
+				Duration:  fmt.Sprintf("%v", time.Since(t0)),
+			},
 		)
 	}(time.Now())
 
@@ -92,59 +129,50 @@ func (ms *mysqlstoredummy) Delete(id string) (err error) {
 	}
 
 	// Update state
-	ms.Lock()
-	delete(ms.store, id)
-	ms.Unlock()
-
 	return
 }
 
 func (ms *mysqlstoredummy) Get(id string) (record store.Record, err error) {
 	defer func(t0 time.Time) {
-		logger.Log(
-			"service", "mysqlstoredummy",
-			"operation", "get",
-			"id", id,
-			"error", err,
-			"duration", time.Since(t0),
+		errStr := ""
+		if err != nil {
+			errStr = err.Error()
+		}
+		ms.logger.Printf("%v",
+			logrec{
+				Service:   "mysqldummy",
+				Operation: "get",
+				ID:        id,
+				Error:     errStr,
+				Duration:  fmt.Sprintf("%v", time.Since(t0)),
+			},
 		)
 	}(time.Now())
 
-	ms.RLock()
-	defer ms.RUnlock()
-
-	var ok bool
-	if record, ok = ms.store[id]; !ok {
-		err = ErrNotFound
-	}
+	// get by id
 
 	return
 }
 
 func (ms *mysqlstoredummy) GetAll() (records []store.Record, err error) {
 	defer func(t0 time.Time) {
-		logger.Log(
-			"service", "mysqlstoredummy",
-			"operation", "getAll",
-			"error", err,
-			"duration", time.Since(t0),
+		errStr := ""
+		if err != nil {
+			errStr = err.Error()
+		}
+		ms.logger.Printf("%+v",
+			logrec{
+				Service:   "mysqldummy",
+				Operation: "get-all",
+				Error:     errStr,
+				Duration:  fmt.Sprintf("%v", time.Since(t0)),
+			},
 		)
 	}(time.Now())
-
-	ms.RLock()
-	defer ms.RUnlock()
-
-	// Collect all job objects
-	for _, v := range ms.store {
-		records = append(records, v)
-	}
 
 	return
 }
 
 func (ms *mysqlstoredummy) isPresent(id string) bool {
-	ms.RLock()
-	defer ms.RUnlock()
-	_, ok := ms.store[id]
-	return ok
+	return true
 }

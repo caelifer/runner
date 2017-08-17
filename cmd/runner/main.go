@@ -3,34 +3,32 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
-	"github.com/caelifer/runner/component"
 	"github.com/caelifer/runner/component/impl/job"
 	"github.com/caelifer/runner/component/impl/task"
 	"github.com/caelifer/runner/service/impl/mysql"
-	"github.com/caelifer/runner/service/store"
 )
 
 func main() {
+	logger := log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
 	// Create store.Service
-	var storeService store.Service = mysql.New()
-
+	var storeService = mysql.New()
 	// Create job component with tasks
-	var j = job.New(storeService, []component.Task{
+	var j = job.New(
+		storeService,
 		task.New("converter-lres", "convert-stream", "-r 420x280"),
 		task.New("converter-mres", "convert-stream", "-r 1280x720"),
 		task.New("converter-hres", "convert-stream", "-r 1920x1080"),
-	})
-
-	// Create job's conext
+	)
+	// Create job's context
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*2)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
-
 	// Execute job
 	err := j.Run(ctx)
 	if err != nil {
-		log.Fatalf("runner: %v", err)
+		logger.Fatalf("runner: %v", err)
 	}
 }

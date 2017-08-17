@@ -2,8 +2,10 @@ package task
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -16,29 +18,51 @@ func init() {
 }
 
 type task struct {
-	name string
-	cmd  string
-	args []string
-	err  error
+	name   string
+	cmd    string
+	args   []string
+	err    error
+	logger *log.Logger
+}
+
+type logrec struct {
+	Component string `json:"component"`
+	Name      string `json:"name"`
+	Operation string `json:"operation"`
+	Cmd       string `json:"cmd"`
+	Error     string `json:"error,omitempty"`
+	Duration  string `json:"duration"`
+}
+
+func (l logrec) String() string {
+	out, _ := json.Marshal(&l)
+	return string(out)
 }
 
 func New(name string, cmd string, args ...string) *task {
 	return &task{
-		name: name,
-		cmd:  cmd,
-		args: args,
+		name:   name,
+		cmd:    cmd,
+		args:   args,
+		logger: log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile),
 	}
 }
 
 func (t *task) Execute(ctx context.Context) (err error) {
 	defer func(t0 time.Time) {
-		logger.Log(
-			"component", "task",
-			"name", t.name,
-			"operation", "execute",
-			"cmd", strings.Join(append([]string{t.cmd}, t.args...), " "),
-			"error", err,
-			"duration", time.Since(t0),
+		errStr := ""
+		if err != nil {
+			errStr = err.Error()
+		}
+		t.logger.Printf("%v",
+			logrec{
+				Component: "task",
+				Name:      t.name,
+				Operation: "execute",
+				Cmd:       strings.Join(append([]string{t.cmd}, t.args...), " "),
+				Error:     errStr,
+				Duration:  fmt.Sprintf("%v", time.Since(t0)),
+			},
 		)
 	}(time.Now())
 
