@@ -78,7 +78,7 @@ func (ms *mysqlstore) Create(record store.Record) (err error) {
 				Duration:  fmt.Sprintf("%v", time.Since(t0)),
 			},
 		)
-	}(t0)
+	}(time.Now())
 
 	// run create op
 

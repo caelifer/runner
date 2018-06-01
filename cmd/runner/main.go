@@ -24,7 +24,7 @@ func main() {
 	)
 	// Create job's context
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*4)
 	defer cancel()
 	// Execute job
 	err := j.Run(ctx)
