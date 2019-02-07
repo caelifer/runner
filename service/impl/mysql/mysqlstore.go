@@ -1,33 +1,36 @@
 package mysql
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
 	"os"
 	"time"
 
-	"fmt"
-
-	"encoding/json"
-
 	"github.com/caelifer/runner/service/store"
 	"github.com/jinzhu/gorm"
+
+	// installing mysql driver for gorm module
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
+// Exported errors.
 var (
+	// ErrNotFound error is returned when object is not found in the data store.
 	ErrNotFound = errors.New("object not found")
 )
 
-// type that implements store.Service service interface
+// mysqlstoredummy is an internal type that implements store.Service interface.
 type mysqlstoredummy struct {
 	entropy io.Reader
 	db      *gorm.DB
 	logger  *log.Logger
 }
 
+// logrec is an internal type used for structured logging.
 type logrec struct {
 	Service   string `json:"service"`
 	Operation string `json:"operation"`
@@ -36,12 +39,14 @@ type logrec struct {
 	Duration  string `json:"duration"`
 }
 
+// String serialiazes structured log entry to JSON encoded string.
 func (l logrec) String() string {
 	out, _ := json.Marshal(&l)
 	return string(out)
 }
 
-func New() *mysqlstoredummy {
+// New creates new MySQL based data store service.
+func New() store.Service {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
 	db, err := gorm.Open("mysql", "root@/test?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
@@ -55,6 +60,7 @@ func New() *mysqlstoredummy {
 	}
 }
 
+// Create new record in data store.
 func (ms *mysqlstoredummy) Create(record store.Record) (err error) {
 	t0 := time.Now()
 	defer func(t0 time.Time) {
@@ -78,6 +84,7 @@ func (ms *mysqlstoredummy) Create(record store.Record) (err error) {
 	return
 }
 
+// Update existing record in data store.
 func (ms *mysqlstoredummy) Update(id string, record store.Record) (err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
@@ -105,6 +112,7 @@ func (ms *mysqlstoredummy) Update(id string, record store.Record) (err error) {
 	return
 }
 
+// Delete existing record from data store.
 func (ms *mysqlstoredummy) Delete(id string) (err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
@@ -132,6 +140,7 @@ func (ms *mysqlstoredummy) Delete(id string) (err error) {
 	return
 }
 
+// Get retrieves record from data store based on provided id.
 func (ms *mysqlstoredummy) Get(id string) (record store.Record, err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
@@ -154,6 +163,7 @@ func (ms *mysqlstoredummy) Get(id string) (record store.Record, err error) {
 	return
 }
 
+// GetAll fetches all records from data store as a slice.
 func (ms *mysqlstoredummy) GetAll() (records []store.Record, err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
@@ -173,6 +183,7 @@ func (ms *mysqlstoredummy) GetAll() (records []store.Record, err error) {
 	return
 }
 
+// isPresent checks if record with given id exists in data store.
 func (ms *mysqlstoredummy) isPresent(id string) bool {
 	return true
 }

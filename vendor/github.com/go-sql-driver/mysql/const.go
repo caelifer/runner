@@ -9,7 +9,9 @@
 package mysql
 
 const (
-	minProtocolVersion byte = 10
+	defaultAuthPlugin       = "mysql_native_password"
+	defaultMaxAllowedPacket = 4 << 20 // 4 MiB
+	minProtocolVersion      = 10
 	maxPacketSize           = 1<<24 - 1
 	timeFormat              = "2006-01-02 15:04:05.999999"
 )
@@ -18,17 +20,18 @@ const (
 // http://dev.mysql.com/doc/internals/en/client-server-protocol.html
 
 const (
-	iOK          byte = 0x00
-	iLocalInFile byte = 0xfb
-	iEOF         byte = 0xfe
-	iERR         byte = 0xff
+	iOK           byte = 0x00
+	iAuthMoreData byte = 0x01
+	iLocalInFile  byte = 0xfb
+	iEOF          byte = 0xfe
+	iERR          byte = 0xff
 )
 
 // https://dev.mysql.com/doc/internals/en/capability-flags.html#packet-Protocol::CapabilityFlags
 type clientFlag uint32
 
 const (
-	clientLongPassword               clientFlag = 1 << iota
+	clientLongPassword clientFlag = 1 << iota
 	clientFoundRows
 	clientLongFlag
 	clientConnectWithDB
@@ -56,7 +59,7 @@ const (
 )
 
 const (
-	comQuit             byte = iota + 1
+	comQuit byte = iota + 1
 	comInitDB
 	comQuery
 	comFieldList
@@ -87,8 +90,10 @@ const (
 )
 
 // https://dev.mysql.com/doc/internals/en/com-query-response.html#packet-Protocol::ColumnType
+type fieldType byte
+
 const (
-	fieldTypeDecimal   byte = iota
+	fieldTypeDecimal fieldType = iota
 	fieldTypeTiny
 	fieldTypeShort
 	fieldTypeLong
@@ -107,7 +112,7 @@ const (
 	fieldTypeBit
 )
 const (
-	fieldTypeJSON       byte = iota + 0xf5
+	fieldTypeJSON fieldType = iota + 0xf5
 	fieldTypeNewDecimal
 	fieldTypeEnum
 	fieldTypeSet
@@ -123,7 +128,7 @@ const (
 type fieldFlag uint16
 
 const (
-	flagNotNULL       fieldFlag = 1 << iota
+	flagNotNULL fieldFlag = 1 << iota
 	flagPriKey
 	flagUniqueKey
 	flagMultipleKey
@@ -145,9 +150,9 @@ const (
 type statusFlag uint16
 
 const (
-	statusInTrans             statusFlag = 1 << iota
+	statusInTrans statusFlag = 1 << iota
 	statusInAutocommit
-	statusReserved             // Not in documentation
+	statusReserved // Not in documentation
 	statusMoreResultsExists
 	statusNoGoodIndexUsed
 	statusNoIndexUsed
@@ -160,4 +165,10 @@ const (
 	statusPsOutParams
 	statusInTransReadonly
 	statusSessionStateChanged
+)
+
+const (
+	cachingSha2PasswordRequestPublicKey          = 2
+	cachingSha2PasswordFastAuthSuccess           = 3
+	cachingSha2PasswordPerformFullAuthentication = 4
 )
