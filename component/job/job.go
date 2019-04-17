@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/caelifer/runner/component"
+	"github.com/caelifer/runner/service/generator"
 	"github.com/caelifer/runner/service/store"
-	"github.com/caelifer/runner/util/generator"
 )
 
 var timeout = time.Duration(5 * time.Second)
@@ -48,7 +48,7 @@ func New(store store.Service, tasks ...component.Task) *job {
 		logger: log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile),
 	}
 
-	j.store.Create(j)
+	_ = j.store.Create(j)
 
 	return j
 }
@@ -95,6 +95,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 	wg.Add(len(j.tasks))
 	for _, task := range j.tasks {
 		task := task
+		_ = j.store.Create(task)
 		go func() {
 			defer wg.Done()
 
@@ -102,6 +103,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 			defer cancel()
 
 			err := task.Execute(ctx)
+			_ = j.store.Update(task.ID(), task)
 			res <- result{task.Name(), err}
 		}()
 	}
@@ -111,7 +113,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 	}()
 
 	// Gather execution status for all executed tasks
-	txt := []string{}
+	var txt []string
 	for r := range res {
 		if r.err != nil {
 			j.success = false
@@ -124,7 +126,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 
 	// Update persistent state
 	j.text = strings.Join(txt, ", ")
-	j.store.Update(j.id, j)
+	_ = j.store.Update(j.id, j)
 
 	if !j.success {
 		err = fmt.Errorf("job %v failed: %v", j.id, j.text)

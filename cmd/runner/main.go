@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/caelifer/runner/component/impl/job"
-	"github.com/caelifer/runner/component/impl/task"
-	"github.com/caelifer/runner/service/impl/mysql"
+	"github.com/caelifer/runner/component/job"
+	"github.com/caelifer/runner/component/task"
+	"github.com/caelifer/runner/service/store/mysql"
 )
 
 func main() {

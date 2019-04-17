@@ -23,8 +23,8 @@ var (
 	ErrNotFound = errors.New("object not found")
 )
 
-// mysqlstoredummy is an internal type that implements store.Service interface.
-type mysqlstoredummy struct {
+// mysqlstore is an internal type that implements store.Service interface.
+type mysqlstore struct {
 	entropy io.Reader
 	db      *gorm.DB
 	logger  *log.Logger
@@ -35,6 +35,7 @@ type logrec struct {
 	Service   string `json:"service"`
 	Operation string `json:"operation"`
 	ID        string `json:"id,omitempty"`
+	Success   bool   `json:"success,omitempty"`
 	Error     string `json:"error,omitempty"`
 	Duration  string `json:"duration"`
 }
@@ -53,7 +54,7 @@ func New() store.Service {
 		logger.Fatal(err)
 	}
 
-	return &mysqlstoredummy{
+	return &mysqlstore{
 		db:      db,
 		logger:  logger,
 		entropy: rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -61,7 +62,7 @@ func New() store.Service {
 }
 
 // Create new record in data store.
-func (ms *mysqlstoredummy) Create(record store.Record) (err error) {
+func (ms *mysqlstore) Create(record store.Record) (err error) {
 	t0 := time.Now()
 	defer func(t0 time.Time) {
 		errStr := ""
@@ -70,7 +71,7 @@ func (ms *mysqlstoredummy) Create(record store.Record) (err error) {
 		}
 		ms.logger.Printf("%v",
 			logrec{
-				Service:   "mysqldummy",
+				Service:   "mysql",
 				Operation: "create",
 				ID:        record.ID(),
 				Error:     errStr,
@@ -85,7 +86,7 @@ func (ms *mysqlstoredummy) Create(record store.Record) (err error) {
 }
 
 // Update existing record in data store.
-func (ms *mysqlstoredummy) Update(id string, record store.Record) (err error) {
+func (ms *mysqlstore) Update(id string, record store.Record) (err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
@@ -93,9 +94,10 @@ func (ms *mysqlstoredummy) Update(id string, record store.Record) (err error) {
 		}
 		ms.logger.Printf("%v",
 			logrec{
-				Service:   "mysqldummy",
+				Service:   "mysql",
 				Operation: "update",
 				ID:        record.ID(),
+				Success:   record.Success(),
 				Error:     errStr,
 				Duration:  fmt.Sprintf("%v", time.Since(t0)),
 			},
@@ -113,7 +115,7 @@ func (ms *mysqlstoredummy) Update(id string, record store.Record) (err error) {
 }
 
 // Delete existing record from data store.
-func (ms *mysqlstoredummy) Delete(id string) (err error) {
+func (ms *mysqlstore) Delete(id string) (err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
@@ -121,7 +123,7 @@ func (ms *mysqlstoredummy) Delete(id string) (err error) {
 		}
 		ms.logger.Printf("%v",
 			logrec{
-				Service:   "mysqldummy",
+				Service:   "mysql",
 				Operation: "delete",
 				ID:        id,
 				Error:     errStr,
@@ -141,7 +143,7 @@ func (ms *mysqlstoredummy) Delete(id string) (err error) {
 }
 
 // Get retrieves record from data store based on provided id.
-func (ms *mysqlstoredummy) Get(id string) (record store.Record, err error) {
+func (ms *mysqlstore) Get(id string) (record store.Record, err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
@@ -149,7 +151,7 @@ func (ms *mysqlstoredummy) Get(id string) (record store.Record, err error) {
 		}
 		ms.logger.Printf("%v",
 			logrec{
-				Service:   "mysqldummy",
+				Service:   "mysql",
 				Operation: "get",
 				ID:        id,
 				Error:     errStr,
@@ -164,7 +166,7 @@ func (ms *mysqlstoredummy) Get(id string) (record store.Record, err error) {
 }
 
 // GetAll fetches all records from data store as a slice.
-func (ms *mysqlstoredummy) GetAll() (records []store.Record, err error) {
+func (ms *mysqlstore) GetAll() (records []store.Record, err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
@@ -172,7 +174,7 @@ func (ms *mysqlstoredummy) GetAll() (records []store.Record, err error) {
 		}
 		ms.logger.Printf("%+v",
 			logrec{
-				Service:   "mysqldummy",
+				Service:   "mysql",
 				Operation: "get-all",
 				Error:     errStr,
 				Duration:  fmt.Sprintf("%v", time.Since(t0)),
@@ -184,6 +186,6 @@ func (ms *mysqlstoredummy) GetAll() (records []store.Record, err error) {
 }
 
 // isPresent checks if record with given id exists in data store.
-func (ms *mysqlstoredummy) isPresent(id string) bool {
+func (ms *mysqlstore) isPresent(id string) bool {
 	return true
 }

@@ -11,6 +11,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/caelifer/runner/service/generator"
 )
 
 func init() {
@@ -18,6 +20,7 @@ func init() {
 }
 
 type task struct {
+	id     string
 	name   string
 	cmd    string
 	args   []string
@@ -27,6 +30,7 @@ type task struct {
 
 type logrec struct {
 	Component string `json:"component"`
+	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Operation string `json:"operation"`
 	Cmd       string `json:"cmd"`
@@ -41,6 +45,7 @@ func (l logrec) String() string {
 
 func New(name string, cmd string, args ...string) *task {
 	return &task{
+		id:     generator.NewID(),
 		name:   name,
 		cmd:    cmd,
 		args:   args,
@@ -57,6 +62,7 @@ func (t *task) Execute(ctx context.Context) (err error) {
 		t.logger.Printf("%v",
 			logrec{
 				Component: "task",
+				ID:        t.id,
 				Name:      t.name,
 				Operation: "execute",
 				Cmd:       strings.Join(append([]string{t.cmd}, t.args...), " "),
@@ -90,4 +96,12 @@ func (t *task) Name() string {
 func (t *task) String() string {
 	return fmt.Sprintf("%v: %q", t.name,
 		strings.Join(append([]string{t.cmd}, t.args...), " "))
+}
+
+func (t *task) ID() string {
+	return t.id
+}
+
+func (t *task) Success() bool {
+	return t.err == nil
 }
