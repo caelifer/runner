@@ -8,6 +8,7 @@ import (
 
 	"github.com/caelifer/runner/component/job"
 	"github.com/caelifer/runner/component/task"
+	"github.com/caelifer/runner/service/store/memory"
 )
 
 func main() {
