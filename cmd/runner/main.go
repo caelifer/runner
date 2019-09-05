@@ -8,13 +8,12 @@ import (
 
 	"github.com/caelifer/runner/component/job"
 	"github.com/caelifer/runner/component/task"
-	"github.com/caelifer/runner/service/store/mysql"
 )
 
 func main() {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
 	// Create store.Service
-	var storeService = mysql.New()
+	var storeService = memory.New()
 	// Create job component with tasks
 	var j = job.New(
 		storeService,
