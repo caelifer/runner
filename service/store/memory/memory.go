@@ -19,14 +19,14 @@ var (
 	ErrNotFound = errors.New("object not found")
 )
 
-// memorystore is an internal type that implements store.Service interface.
-type memorystore struct {
+// memoryStore is an internal type that implements store.Service interface.
+type memoryStore struct {
 	entropy io.Reader
 	logger  *log.Logger
 }
 
-// logrec is an internal type used for structured logging.
-type logrec struct {
+// logRec is an internal type used for structured logging.
+type logRec struct {
 	Service   string `json:"service"`
 	Operation string `json:"operation"`
 	ID        string `json:"id,omitempty"`
@@ -35,8 +35,8 @@ type logrec struct {
 	Duration  string `json:"duration"`
 }
 
-// String serialiazes structured log entry to JSON encoded string.
-func (l logrec) String() string {
+// String serializes structured log entry to JSON encoded string.
+func (l logRec) String() string {
 	out, _ := json.Marshal(&l)
 	return string(out)
 }
@@ -45,21 +45,21 @@ func (l logrec) String() string {
 func New() store.Service {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
 
-	return &memorystore{
+	return &memoryStore{
 		logger:  logger,
 		entropy: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
 // Create new record in data store.
-func (ms *memorystore) Create(record store.Record) (err error) {
+func (ms *memoryStore) Create(record store.Record) (err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
 			errStr = err.Error()
 		}
 		ms.logger.Printf("%v",
-			logrec{
+			logRec{
 				Service:   "memory",
 				Operation: "create",
 				ID:        record.ID(),
@@ -75,14 +75,14 @@ func (ms *memorystore) Create(record store.Record) (err error) {
 }
 
 // Update existing record in data store.
-func (ms *memorystore) Update(id string, record store.Record) (err error) {
+func (ms *memoryStore) Update(id string, record store.Record) (err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
 			errStr = err.Error()
 		}
 		ms.logger.Printf("%v",
-			logrec{
+			logRec{
 				Service:   "memory",
 				Operation: "update",
 				ID:        record.ID(),
@@ -104,14 +104,14 @@ func (ms *memorystore) Update(id string, record store.Record) (err error) {
 }
 
 // Delete existing record from data store.
-func (ms *memorystore) Delete(id string) (err error) {
+func (ms *memoryStore) Delete(id string) (err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
 			errStr = err.Error()
 		}
 		ms.logger.Printf("%v",
-			logrec{
+			logRec{
 				Service:   "memory",
 				Operation: "delete",
 				ID:        id,
@@ -132,14 +132,14 @@ func (ms *memorystore) Delete(id string) (err error) {
 }
 
 // Get retrieves record from data store based on provided id.
-func (ms *memorystore) Get(id string) (record store.Record, err error) {
+func (ms *memoryStore) Get(id string) (record store.Record, err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
 			errStr = err.Error()
 		}
 		ms.logger.Printf("%v",
-			logrec{
+			logRec{
 				Service:   "memory",
 				Operation: "get",
 				ID:        id,
@@ -155,14 +155,14 @@ func (ms *memorystore) Get(id string) (record store.Record, err error) {
 }
 
 // GetAll fetches all records from data store as a slice.
-func (ms *memorystore) GetAll() (records []store.Record, err error) {
+func (ms *memoryStore) GetAll() (records []store.Record, err error) {
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
 			errStr = err.Error()
 		}
 		ms.logger.Printf("%+v",
-			logrec{
+			logRec{
 				Service:   "memory",
 				Operation: "get-all",
 				Error:     errStr,
@@ -175,6 +175,6 @@ func (ms *memorystore) GetAll() (records []store.Record, err error) {
 }
 
 // isPresent checks if record with given id exists in data store.
-func (ms *memorystore) isPresent(id string) bool {
+func (ms *memoryStore) isPresent(_ string) bool {
 	return true
 }

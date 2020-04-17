@@ -26,7 +26,7 @@ type job struct {
 	logger  *log.Logger
 }
 
-type logrec struct {
+type logRec struct {
 	Component string `json:"component"`
 	ID        string `json:"id"`
 	Status    string `json:"status"`
@@ -35,7 +35,7 @@ type logrec struct {
 	Duration  string `json:"duration,omitempty"`
 }
 
-func (l logrec) String() string {
+func (l logRec) String() string {
 	out, _ := json.Marshal(&l)
 	return string(out)
 }
@@ -68,7 +68,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 			errStr = err.Error()
 		}
 		j.logger.Printf("%v",
-			logrec{
+			logRec{
 				Component: "job",
 				ID:        j.id,
 				Status:    "finished",
@@ -80,7 +80,7 @@ func (j *job) Run(ctx context.Context) (err error) {
 	}(time.Now())
 
 	j.logger.Printf("%v",
-		logrec{
+		logRec{
 			Component: "job",
 			ID:        j.id,
 			Status:    "started",
