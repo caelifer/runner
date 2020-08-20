@@ -18,9 +18,9 @@ func main() {
 	// Create job component with tasks
 	var j = job.New(
 		storeService,
-		task.New("converter-lres", "convert-stream", "-r 420x280"),
-		task.New("converter-mres", "convert-stream", "-r 1280x720"),
-		task.New("converter-hres", "convert-stream", "-r 1920x1080"),
+		task.New("low-res", "convert-stream", "-r 420x280"),
+		task.New("mid-res", "convert-stream", "-r 1280x720"),
+		task.New("hi-res", "convert-stream", "-r 1920x1080"),
 	)
 	// Create job's context
 	ctx := context.Background()
