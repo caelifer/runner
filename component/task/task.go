@@ -76,7 +76,9 @@ func (t *task) Execute(ctx context.Context) (err error) {
 	pause := fmt.Sprintf("%.2f", (time.Duration(500+rand.Intn(5000)) * time.Millisecond).Seconds())
 	// Simulate work
 	cmd := exec.CommandContext(ctx, "sleep", pause)
+	// Use our own STDERR for task's diagnostic messages
 	cmd.Stderr = os.Stderr
+	// Run external command
 	if err = cmd.Run(); err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
 			err = errors.New("execution timed out")

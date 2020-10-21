@@ -63,7 +63,6 @@ func New() store.Service {
 
 // Create new record in data store.
 func (ms *mysqlstore) Create(record store.Record) (err error) {
-	t0 := time.Now()
 	defer func(t0 time.Time) {
 		errStr := ""
 		if err != nil {
