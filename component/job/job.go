@@ -15,7 +15,7 @@ import (
 	"github.com/caelifer/runner/service/store"
 )
 
-var timeout = time.Duration(5 * time.Second)
+var timeout = 5 * time.Second
 
 type job struct {
 	id      string

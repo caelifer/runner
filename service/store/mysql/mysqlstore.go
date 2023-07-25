@@ -40,13 +40,14 @@ type logrec struct {
 	Duration  string `json:"duration"`
 }
 
-// String serialiazes structured log entry to JSON encoded string.
+// String serializes structured log entry to JSON encoded string.
 func (l logrec) String() string {
 	out, _ := json.Marshal(&l)
 	return string(out)
 }
 
 // New creates new MySQL based data store service.
+//goland:noinspection GoUnusedExportedFunction
 func New() store.Service {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
 	db, err := gorm.Open("mysql", "root@/test?charset=utf8&parseTime=True&loc=Local")
@@ -185,6 +186,7 @@ func (ms *mysqlstore) GetAll() (records []store.Record, err error) {
 }
 
 // isPresent checks if record with given id exists in data store.
+//goland:noinspection GoUnusedParameter
 func (ms *mysqlstore) isPresent(id string) bool {
 	return true
 }
