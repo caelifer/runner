@@ -12,7 +12,7 @@ require (
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
 	github.com/oklog/ulid v1.3.1
-	golang.org/x/crypto v0.0.0-20190130090550-b01c7a725664 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 )
 
